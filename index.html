@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SSC CGL Revision Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Firebase (Firestore) — used so progress syncs across your phone and computer -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --ink-900:#14171c;
+    --ink-850:#181c22;
+    --ink-800:#1e232b;
+    --ink-750:#252b34;
+    --line:#333b46;
+    --paper:#ece5d3;
+    --paper-dim:#c7c0ae;
+    --brass:#c1963f;
+    --brass-dim:#8a723a;
+    --vermillion:#b8503b;
+    --vermillion-dim:#6b3a30;
+    --moss:#6f9169;
+    --moss-dim:#3f5a3d;
+    --slate:#8c94a3;
+    --slate-dim:#565f6c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink-900);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  h1,h2,h3,.serif{font-family:'Source Serif 4',serif;}
+  ::selection{background:var(--brass);color:var(--ink-900);}
+
+  /* ===== layout shell ===== */
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 100px;}
+
+  /* ===== header / masthead ===== */
+  .masthead{
+    display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:2px solid var(--brass-dim);
+    padding-bottom:14px;margin-bottom:26px;
+    gap:12px;flex-wrap:wrap;
+  }
+  .masthead h1{
+    font-size:23px;font-weight:600;margin:0;letter-spacing:0.2px;color:var(--paper);
+  }
+  .masthead .sub{color:var(--slate);font-size:13px;margin-top:3px;}
+  .masthead .date{
+    font-size:13px;color:var(--brass);text-align:right;font-variant-numeric:tabular-nums;
+  }
+
+  /* ===== hero: today's docket ===== */
+  .docket{
+    display:grid;grid-template-columns:auto 1fr;gap:26px;
+    padding:22px 24px;margin-bottom:30px;
+    background:linear-gradient(180deg,var(--ink-850),var(--ink-800));
+    border:1px solid var(--line);border-radius:6px;
+    position:relative;overflow:hidden;
+  }
+  .docket::before{
+    content:"";position:absolute;top:0;left:0;bottom:0;width:4px;background:var(--vermillion);
+  }
+  .docket-count{
+    display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-width:110px;
+  }
+  .docket-count .n{
+    font-family:'Source Serif 4',serif;font-size:56px;font-weight:700;line-height:1;
+    color:var(--vermillion);font-variant-numeric:tabular-nums;
+  }
+  .docket-count .n.zero{color:var(--moss);}
+  .docket-count .lbl{font-size:12.5px;color:var(--slate);margin-top:8px;line-height:1.4;}
+  .docket-list{min-width:0;}
+  .docket-list-title{font-size:11.5px;color:var(--slate);margin-bottom:10px;}
+  .docket-items{display:flex;flex-wrap:wrap;gap:8px;}
+  .docket-chip{
+    font-size:12.5px;padding:5px 11px;border-radius:3px;
+    background:var(--ink-750);border:1px solid var(--line);color:var(--paper-dim);
+    cursor:pointer;transition:border-color .15s;
+  }
+  .docket-chip:hover{border-color:var(--brass);}
+  .docket-chip.overdue{border-color:var(--vermillion-dim);color:#e3a794;}
+  .docket-empty{font-size:13.5px;color:var(--slate);font-style:italic;}
+
+  /* ===== stat strip ===== */
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;
+    margin-bottom:32px;
+  }
+  .stat{background:var(--ink-850);padding:14px 16px;}
+  .stat .v{font-family:'Source Serif 4',serif;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;}
+  .stat .k{font-size:11.5px;color:var(--slate);margin-top:3px;}
+  .stat.a .v{color:var(--vermillion);}
+  .stat.b .v{color:var(--brass);}
+  .stat.c .v{color:var(--moss);}
+  .stat.d .v{color:var(--paper);}
+
+  /* ===== subject register ===== */
+  .subject{margin-bottom:10px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ink-850);}
+  .subject-head{
+    display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;user-select:none;
+  }
+  .subject-head:hover{background:var(--ink-800);}
+  .subject-code{
+    font-family:'Source Serif 4',serif;font-size:13px;color:var(--brass);
+    border:1px solid var(--brass-dim);border-radius:3px;padding:2px 7px;min-width:24px;text-align:center;
+  }
+  .subject-name{font-size:15.5px;font-weight:600;flex:1;}
+  .subject-progress-track{
+    width:120px;height:5px;background:var(--ink-750);border-radius:3px;overflow:hidden;flex-shrink:0;
+  }
+  .subject-progress-fill{height:100%;background:var(--brass);}
+  .subject-progress-txt{font-size:12px;color:var(--slate);width:52px;text-align:right;font-variant-numeric:tabular-nums;}
+  .caret{color:var(--slate);font-size:11px;transition:transform .15s;width:10px;}
+  .subject.open .caret{transform:rotate(90deg);}
+
+  .topics{display:none;border-top:1px solid var(--line);}
+  .subject.open .topics{display:block;}
+
+  .topic-row{
+    display:flex;align-items:flex-start;gap:12px;
+    padding:13px 18px;border-bottom:1px solid var(--line);
+  }
+  .topic-row:last-child{border-bottom:none;}
+  .topic-main{flex:1;min-width:0;}
+  .topic-title{
+    font-size:14px;color:var(--paper);cursor:pointer;display:flex;align-items:center;gap:8px;
+  }
+  .topic-title:hover{color:var(--brass);}
+  .topic-title .exp{color:var(--slate);font-size:10px;width:8px;flex-shrink:0;}
+  .topic-sub{
+    display:none;margin-top:8px;padding-left:16px;border-left:2px solid var(--ink-750);
+  }
+  .topic-sub.open{display:block;}
+  .topic-sub span{
+    display:inline-block;font-size:12px;color:var(--slate);background:var(--ink-750);
+    padding:3px 8px;border-radius:3px;margin:0 6px 6px 0;
+  }
+  .topic-meta{
+    display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;
+  }
+  .stamp{
+    font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid;
+    display:inline-flex;align-items:center;gap:5px;font-weight:500;
+  }
+  .stamp.pending{color:var(--slate);border-color:var(--slate-dim);}
+  .stamp.overdue{color:#e3a794;border-color:var(--vermillion-dim);background:rgba(184,80,59,0.08);}
+  .stamp.today{color:#e0c27f;border-color:var(--brass-dim);background:rgba(193,150,63,0.08);}
+  .stamp.upcoming{color:var(--paper-dim);border-color:var(--line);}
+  .stamp.mastered{color:#9fc19a;border-color:var(--moss-dim);background:rgba(111,145,105,0.08);}
+  .rev-count{font-size:11.5px;color:var(--slate);}
+  .topic-actions{display:flex;gap:8px;flex-shrink:0;padding-top:1px;}
+  .btn{
+    font-family:'Inter',sans-serif;font-size:12px;font-weight:500;
+    padding:6px 12px;border-radius:4px;border:1px solid var(--line);
+    background:transparent;color:var(--paper-dim);cursor:pointer;white-space:nowrap;
+    transition:background .12s, border-color .12s;
+  }
+  .btn:hover{border-color:var(--brass);color:var(--paper);}
+  .btn.primary{background:var(--brass);border-color:var(--brass);color:var(--ink-900);}
+  .btn.primary:hover{background:#d4a94f;}
+  .btn.ghost{color:var(--slate);}
+
+  /* stamp animation on action */
+  @keyframes stampHit{
+    0%{transform:scale(1.6) rotate(-8deg);opacity:0;}
+    55%{transform:scale(0.95) rotate(-2deg);opacity:1;}
+    100%{transform:scale(1) rotate(0deg);opacity:1;}
+  }
+  .stamp.just-hit{animation:stampHit .28s ease-out;}
+
+  /* ===== footer note ===== */
+  .foot-note{
+    margin-top:34px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:12px;color:var(--slate-dim);line-height:1.7;
+  }
+  .foot-note b{color:var(--slate);}
+
+  @media (max-width:640px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .docket{grid-template-columns:1fr;gap:14px;}
+    .docket-count{flex-direction:row;align-items:baseline;gap:12px;}
+    .subject-progress-track{width:70px;}
+    .topic-row{flex-direction:column;}
+    .topic-actions{padding-top:6px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .stamp.just-hit{animation:none;}
+    *{transition:none !important;}
+  }
+  button:focus-visible, .topic-title:focus-visible, .subject-head:focus-visible, .docket-chip:focus-visible{
+    outline:2px solid var(--brass);outline-offset:2px;
+  }
+
+  /* ===== who's revising picker ===== */
+  #whoScreen{
+    position:fixed;inset:0;background:var(--ink-900);
+    display:flex;align-items:center;justify-content:center;
+    z-index:100;flex-direction:column;gap:22px;padding:20px;
+  }
+  #whoScreen.hidden{display:none;}
+  #whoScreen .prompt{font-family:'Source Serif 4',serif;font-size:22px;color:var(--paper);}
+  #whoScreen .options{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
+  #whoScreen .who-btn{
+    font-family:'Source Serif 4',serif;font-size:18px;font-weight:600;
+    padding:18px 34px;border-radius:6px;border:1px solid var(--line);
+    background:var(--ink-850);color:var(--paper);cursor:pointer;
+    transition:border-color .15s,background .15s;min-width:140px;
+  }
+  #whoScreen .who-btn:hover{border-color:var(--brass);background:var(--ink-800);}
+  #whoScreen .status{font-size:12.5px;color:var(--slate);min-height:16px;}
+  .app-hidden{display:none;}
+  .user-pill{
+    display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--slate);
+    border:1px solid var(--line);border-radius:20px;padding:4px 10px 4px 4px;cursor:pointer;
+    background:var(--ink-850);
+  }
+  .user-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--brass);}
+  .user-pill:hover{border-color:var(--brass);color:var(--paper);}
+</style>
+</head>
+<body>
+
+<div id="whoScreen">
+  <div class="prompt">Who's revising?</div>
+  <div class="options">
+    <button class="who-btn" data-name="Mayank">Mayank</button>
+    <button class="who-btn" data-name="Nidhi">Nidhi</button>
+  </div>
+  <div class="status" id="whoStatus"></div>
+</div>
+
+<div class="wrap app-hidden" id="appRoot">
+
+  <div class="masthead">
+    <div>
+      <h1>SSC CGL Revision Register</h1>
+      <div class="sub">121 topics · 11 subjects · scheduled by the forgetting curve</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+      <div class="date" id="todayLabel"></div>
+      <div class="user-pill" id="userPill" title="Switch user"><span class="dot"></span><span id="userPillName"></span></div>
+    </div>
+  </div>
+
+  <div class="docket">
+    <div class="docket-count">
+      <div class="n" id="dueCount">0</div>
+      <div class="lbl">topics due<br>for revision today</div>
+    </div>
+    <div class="docket-list">
+      <div class="docket-list-title" id="docketTitle">TODAY'S DOCKET</div>
+      <div class="docket-items" id="docketItems"></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat a"><div class="v" id="statOverdue">0</div><div class="k">overdue</div></div>
+    <div class="stat b"><div class="v" id="statUnread">0</div><div class="k">not yet read</div></div>
+    <div class="stat d"><div class="v" id="statReading">0</div><div class="k">in revision cycle</div></div>
+    <div class="stat c"><div class="v" id="statMastered">0</div><div class="k">mastered (5+)</div></div>
+  </div>
+
+  <div id="registers"></div>
+
+  <div class="foot-note">
+    <b>How the schedule works —</b> the day you mark a topic "read", it's due back for a quick pass after 1 day. Each time you revise it on schedule, the gap widens: 1 → 3 → 7 → 15 → 30 → 60 days, following the standard spaced-repetition curve for exam retention. Five revisions and a topic is marked mastered, but it still resurfaces every 60 days to keep it from fading. Everything here is saved to your account automatically.
+  </div>
+
+</div>
+
+<script>
+const SUBJECTS = [
+{code:"01",name:"Geography",topics:[
+{t:"Solar System",s:["Origin of Universe","Celestial Bodies","Constellation","The Sun","Planets","Solar, Lunar and Mars Missions","Dwarf Planets"]},
+{t:"Longitude and Latitude",s:["The Earth","Latitude and Longitude","Solstice and Equinox","Tides"]},
+{t:"Earth's Interior and Plate Tectonics",s:["Layers of Earth","Earthquake","Tectonic Plates","Ring of Fire"]},
+{t:"Rocks, Continents and Oceans",s:["Igneous Rock","Sedimentary Rock","Metamorphic Rock","Volcano","Continents and Ocean","Seafloor Spreading","Corals"]},
+{t:"Geomorphology",s:["Geomorphological Process"]},
+{t:"Landforms",s:["Depositional Landforms","Erosional Landforms"]},
+{t:"Atmosphere",s:["Different Layers of Atmosphere","Insolation","Heat Budget","Water on Earth","Clouds","Rainfall"]},
+{t:"Wind, Ocean Current and Cyclone",s:["Wind and Pressure Difference","Geostrophic Wind","Local Winds","Cyclone","Anticyclone","Ocean Currents"]},
+{t:"India and Its Location",s:["India","Land Border of India","Coastal Boundary of India"]},
+{t:"Himalayas",s:["Mountains","Himalayas","Regional Division of Himalayas","Mountain Passes"]},
+{t:"Peninsular Plateau",s:["Peninsular Plateau","Central Highlands","Satpura and Vindhya Range","Deccan Plateau","Western and Eastern Ghats"]},
+{t:"Northern Plains and Islands",s:["Northern Plains","Coastal Plains of India","Ports","Islands","Andaman and Nicobar Islands","Lakshadweep"]},
+{t:"Himalayan River System",s:["Drainage Pattern","Indian Drainage System","Indus River System","Ganga River System","Brahmaputra River System","East Flowing Rivers","West Flowing Rivers"]},
+{t:"Peninsular Rivers",s:["Major Dams/Projects","State-wise Dams","Waterfalls","State-wise Lakes"]},
+{t:"Dams, Lakes and Waterfalls",s:["Major Dams/Projects","State-wise Dams","Waterfalls","State-wise Lakes"]},
+{t:"Monsoon",s:["Seasons in India","La Niña and El Niño","Continentality Effect","Koeppen Climate Classification"]},
+{t:"Forest and Grassland",s:["Vegetation/Forests","Grasslands"]},
+{t:"Soil",s:["Soil","Soil Erosion and Soil Conservation"]},
+{t:"Agriculture",s:["Agriculture","Agricultural Revolution"]},
+{t:"Minerals",s:["Distribution of Minerals","Energy Resources"]},
+{t:"World Map",s:["Asia","Africa","North America","South America","Europe","Oceania","Arctic and Antarctica","Cities Located on Banks of River"]},
+{t:"Human Geography",s:["Population Distribution","Demographic Transition Model","Settlements"]},
+{t:"Transport",s:["Modes of Transport","Land Transport","Water Transport","Air Transport"]},
+]},
+{code:"02",name:"Ancient History",topics:[
+{t:"Stone Age",s:["Division of History","Palaeolithic Period","Mesolithic Period","Neolithic Period","Chalcolithic Period"]},
+{t:"Indus Valley Civilization",s:["Agricultural Technologies","Animal Domestication","Town Planning","Harappan Seals","Scripts","Sites"]},
+{t:"Vedic Age",s:["Subdivision of Vedas","Upanishads","Varna System","Pottery"]},
+{t:"Sangam Age",s:["Sangam Literature","Division of Thinais","Cheras","Cholas","Pandyas"]},
+{t:"Jainism and Buddhism",s:["Vardhaman Mahavira","Jain Councils","Gautam Buddha","Buddhist Councils","Buddhist Texts","Buddhist Stupas"]},
+{t:"Mahajanapadas",s:["16 Mahajanapadas","Haryanka Dynasty","Shishunaga Dynasty","Nanda Dynasty"]},
+{t:"Maurya Dynasty",s:["Maurya Dynasty","Rock Edicts","Pillar Edicts","Mauryan Administration"]},
+{t:"Post-Maurya Dynasties",s:["Shunga Dynasty","Kanva Dynasty","Satavahana Dynasty","Invasions from Central Asia","Sakas","Kushans"]},
+{t:"Gupta Dynasty",s:["Gupta Dynasty","Vakataka Dynasty"]},
+{t:"Post-Gupta Dynasties",s:["Pushyabhuti Dynasty","Chalukya Dynasty","Pallava Dynasty","Rashtrakuta Dynasty","Hoysala Dynasty"]},
+{t:"Tripartite Struggle and Cholas",s:["Pala Dynasty","Gurjara Pratihara","Chola Dynasty","Temple Architecture"]},
+]},
+{code:"03",name:"Medieval History",topics:[
+{t:"Delhi Sultanate",s:["Foreign Invasions","Ghaznavid Dynasty","Slave Dynasty","Khilji Dynasty","Tughlaq Dynasty","Sayyid Dynasty","Lodi Dynasty"]},
+{t:"Vijayanagara and Bahmani Kingdom",s:["Sangama","Saluva","Tuluva","Aravidu","Bahmani Kingdom"]},
+{t:"The Mughal Empire",s:["Babur","Humayun","Sher Shah Suri","Akbar","Shah Jahan","Aurangzeb","Later Mughals","Rajputs"]},
+{t:"Marathas",s:["Shivaji","Sambhaji","Rajaram","Shahuji","Balaji Vishwanath","Balaji Baji Rao","Anglo-Maratha Wars"]},
+{t:"Bhakti and Sufi Movements",s:["Bhakti Movement Saints","Sikh Gurus","Sufi Movements"]},
+]},
+{code:"04",name:"Modern History",topics:[
+{t:"Advent of Europeans",s:["Portuguese","Dutch","English","Expansion of British","Carnatic Wars","In Bengal","In Mysore","In Punjab","Afghans","Burma"]},
+{t:"Socio-Religious Reforms",s:["Reform Movements in India","Socio Religious Reform Movements in South India"]},
+{t:"Revolt of 1857",s:["Permanent Settlement","Ryotwari System","Mahalwari System","Sanyasi Revolt","Santhal Rebellion","1857 Revolt","Deccan Revolt"]},
+{t:"Indian National Congress",s:["Associations Formed Before Congress","Formation of Congress","Different Theories","Important Sessions of Congress"]},
+{t:"Bengal Partition",s:["Bengal Partition: 1905","Sessions of Congress","Moderates and Extremists","India Councils Act, 1909","Revolutionary Activities","Home Rule League (HRL), 1916","Lucknow Session, 1916"]},
+{t:"Gandhian Era",s:["Mahatma Gandhi","Government of India Act, 1919","Rowlatt Satyagraha (1919)","Khilafat Movement (1919)","Non-Cooperation Movement (1920)","Formation of Swaraj Party, 1923"]},
+{t:"CDM and Simon Commission",s:["Events Around India","Simon Commission","Factors That Led to Civil Disobedience Movement","Civil Disobedience Movement"]},
+{t:"Quit India Movement",s:["Communal Award","Government of India Act, 1935","Congress Sessions","August Offer, 1940","Cripps Mission, 1942","Quit India Movement, 1942","Indian National Army (INA)","Cabinet Mission Plan","Mountbatten Plan"]},
+{t:"Governor-General and Viceroy",s:["Governor-Generals of India","Viceroys"]},
+]},
+{code:"05",name:"Polity",topics:[
+{t:"Making of Constitution",s:["Constituent Assembly","Cabinet Mission Plan","Interim Government","Drafting Committee"]},
+{t:"Salient Features of the Constitution",s:["Federalism","Schedules of Indian Constitution"]},
+{t:"Preamble",s:["Nature of Constitution","Objectives of Constitution","Enforceability of Constitution"]},
+{t:"Part 1 and Part 2 of the Constitution",s:["Part I — Union and Its Territory","Integration and Formation of States","Chronological Order of State Formation","Part II — Citizenship"]},
+{t:"Fundamental Rights",s:["Right to Equality","Right to Freedom","Right Against Exploitation","Right to Freedom of Religion","Cultural and Educational Rights","Right to Constitutional Remedies"]},
+{t:"DPSP and Fundamental Duties",s:["Part IV — Directive Principles of State Policy","Part IVA — Fundamental Duties"]},
+{t:"President and Vice President of India",s:["Part V — Union Executive","President of India","Vice-President of India"]},
+{t:"Prime Minister and Council of Ministers",s:["Article 74","Article 75","Types of Ministers","Article 76","Article 77","Article 78"]},
+{t:"Parliament",s:["Article 79 — Constitution of Parliament","Officers of Parliament","Cut Motions","Parliamentary Committees","Parliamentary Motions/Procedures","Legislative Procedures","Types of Funds"]},
+{t:"State Legislature",s:["State Executive — Articles 153–167","State Legislature — Articles 168–212"]},
+{t:"Centre-State Relations",s:["Sarkaria Commission","Punchhi Commission","Rajamannar Commission"]},
+{t:"Emergency & Constitutional Amendment",s:["National Emergency","President's Rule","Financial Emergency","Inter-State Council","Part XX — Constitutional Amendment","Recent Constitutional Amendments"]},
+{t:"Supreme Court and High Court",s:["Part V — Supreme Court","Part VI — High Court","Subordinate Courts"]},
+{t:"Local Government",s:["Evolution of Panchayat","Panchayat — 73rd CAA (1992)","PESA Act (1996)","Municipalities — 74th CAA (1992)"]},
+{t:"Constitutional and Non-Constitutional Bodies",s:["Constitutional Bodies","Statutory Bodies","Executive Bodies"]},
+{t:"New Criminal Laws 2023",s:["BNS","BNSS","BSA"]},
+{t:"Important Acts",s:["Historical Background","The Company Rule","The Crown Rule"]},
+{t:"Sources of the Indian Constitution",s:["British Constitution","United States Constitution","Canadian Constitution","Australian Constitution","Constitution of the Soviet Union","Weimar Constitution of Germany","Irish Constitution","French Constitution","Japanese Constitution","South African Constitution","Government of India Act, 1935"]},
+{t:"Noteworthy Points",s:["No detailed flowchart/subtopics were provided for this chapter in the uploaded pages."]},
+]},
+{code:"06",name:"Economics",topics:[
+{t:"Basics of Economy",s:["Economics","Sectors of Economy"]},
+{t:"Microeconomics",s:["Macroeconomics","Demand","Supply","Costs","Types of Market","Macroeconomic Concepts"]},
+{t:"National Income",s:["Circular Flow of Income","Aggregates of National Income"]},
+{t:"Budget and Taxation",s:["Functions of Budget","Revenue and Capital","Taxation System in India","Deficit"]},
+{t:"Inflation and Unemployment",s:["Types of Inflation","WPI and CPI","Types of Unemployment"]},
+{t:"Banking: Part 1",s:["Reserve Bank of India (RBI)","History of Banking System in India","Types of Money","Other Financial Institutions","Microfinance Institutions"]},
+{t:"Monetary Policy",s:["Reserves Maintained by Banks","Monetary Policy Tools","Fiscal Policy"]},
+{t:"Banking: Part 2",s:["Liquidity","Money Aggregate","Banking Regulations"]},
+{t:"Poverty and Balance of Payment",s:["Poverty Estimation in India","Balance of Payment (BOP)","Multidimensional Poverty Index (MPI)","Nostro and Vostro","Exchange Rate Mechanism"]},
+{t:"Five Year Plan and Industrial Policy Resolution",s:["Five-Year Plans","Industrial Policy Resolution (IPR)"]},
+{t:"Indices, Reports, International Institutions & Key Economic Concepts",s:["Indices","Major Economic Reports","Economic Committees"]},
+]},
+{code:"07",name:"Physics",topics:[
+{t:"Motion",s:["Types of Motion","Uniform Circular Motion"]},
+{t:"Force and Laws of Motion",s:["Balanced and Unbalanced Force","Laws of Motion"]},
+{t:"Gravitation and Work Done",s:["Newton's Law of Universal Gravitation","Work and Energy"]},
+{t:"Sound",s:["Sound Waves","Reflection of Sound"]},
+{t:"Reflection and Refraction",s:["Light","Spherical Mirrors","Spherical Lenses","Diffraction"]},
+{t:"Human Eye and Vision",s:["Human Eye","Dispersion of Light","Electromagnetic Spectrum","Refraction in Atmosphere"]},
+{t:"Electricity",s:["Electric Current","Wheatstone Bridge","Kirchhoff's Law"]},
+{t:"Magnetic Effect of Electric Current",s:["Magnetic Field Lines","Maxwell's Screw Rule","Fleming's Left & Right Hand Rule","Electromagnetic Induction"]},
+]},
+{code:"08",name:"Chemistry",topics:[
+{t:"Matter",s:["Four Fundamental States of Matter","Mixture","Methods to Separate Components of a Mixture","Physical and Chemical Changes"]},
+{t:"Atom and Its Structure",s:["Laws of Chemical Combination","The Atomic Models","Electron, Proton, and Neutron","Isotopes","Isobars","Isotones","Atomicity","Mole Concept"]},
+{t:"Periodic Table",s:["Early Attempts at Classification of Elements","Modern Periodic Table","Trends in Periodic Table","Concept of Atomicity"]},
+{t:"Chemical Reactions",s:["Types of Chemical Reaction","Corrosion","Rancidity"]},
+{t:"Metals and Non-Metals",s:["Metalloids","Reactivity Series of Metals","Chemical Properties of Metals & Non-Metals","Metallurgy"]},
+{t:"Acid, Base and Salt",s:["Neutralisation Reaction","Chemicals from Common Salt"]},
+{t:"Carbon and Its Compounds",s:["Allotropes of Carbon","Hydrocarbons","Homologous Series","Organic Compounds","Soaps and Detergents"]},
+]},
+{code:"09",name:"Biology",topics:[
+{t:"Cell",s:["Cell","Cell Organelles","Plant vs Animal Cell","DNA Replication in Animals"]},
+{t:"Plant Tissue and Animal Tissue",s:["Plant Tissue","Animal Tissue","Blood"]},
+{t:"Plant and Animal Kingdom",s:["Classification of Kingdom","Kingdom Monera","Kingdom Protista","Kingdom Fungi","Kingdom Plantae","Kingdom Animalia"]},
+{t:"Nervous System",s:["Central Nervous System","Peripheral Nervous System"]},
+{t:"Hormones and Plant Movement",s:["Glands and Hormones","Plant Hormones and Movements"]},
+{t:"Reproduction",s:["Asexual Reproduction","Sexual Reproduction in Plants","Human Reproductive System"]},
+{t:"Digestion and Respiration",s:["Digestive System","Respiration"]},
+{t:"Circulatory System and Excretory System",s:["Circulatory System","Excretory System"]},
+{t:"Diseases",s:["Diseases Caused by Virus","Diseases Caused by Bacteria","Diseases Caused by Fungus","Diseases Caused by Protozoa","Genetic Disorders","Diseases in Plants"]},
+{t:"Nutrients",s:["Nutrition in Animals","Nutrition in Plants"]},
+{t:"Heredity and Evolution",s:["Hereditary and Variation","Gregor Mendel's Experiment","Skeletal System"]},
+]},
+{code:"10",name:"Environment",topics:[
+{t:"Basics of Environmental Sciences",s:["Introduction to Environment","Ecology","Ecological Succession","Biotic Interactions"]},
+{t:"Ecosystem",s:["Population Ecology","Ecosystem","Aquatic Ecosystem","Coral Reef","Estuaries and Mangroves","Wetlands"]},
+{t:"Trophic Dynamics and Energy Transfer",s:["Energy Flow in Ecosystem","Food Chain","Food Web","Ecological Pyramids"]},
+{t:"Biogeochemical Cycles",s:["Carbon Cycle","Water Cycle","Nitrogen Cycle","Phosphorus Cycle","Sulphur Cycle"]},
+{t:"Environmental Conventions",s:["Minamata Convention","Stockholm Conference","Nairobi Declaration","Vienna Convention","Montreal Protocol","Stockholm Convention","Kyoto Protocol","UNCCD","Earth Summit","Basel Convention","Helsinki Declaration","Johannesburg Declaration","Rotterdam Convention","Cartagena Protocol on Biosafety","Bonn Convention","Nagoya Protocol","Paris Agreement"]},
+{t:"National Parks",s:["Conservation Sites","Biosphere Reserves in India"]},
+]},
+{code:"11",name:"Static GK",topics:[
+{t:"Music and Paintings",s:["Indian Classical Music","Gharanas","Musical Instruments","Paintings of Different States of India"]},
+{t:"Classical Dance",s:["Bharatanatyam","Kuchipudi","Odissi","Kathak","Mohiniyattam","Kathakali","Manipuri","Sattriya","Various Organisations"]},
+{t:"Folk Dances of India",s:["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Jammu & Kashmir","Karnataka","Kerala","Madhya Pradesh","Manipur","Meghalaya","Mizoram","Maharashtra","Martial Art Dances","West Bengal","Uttarakhand","Uttar Pradesh","Tripura","Telangana","Tamil Nadu","Rajasthan","Sikkim","Nagaland","Odisha","Punjab","Lakshadweep","Ladakh"]},
+{t:"Festivals of India",s:["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Himachal Pradesh","Haryana","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Manipur","Meghalaya","Mizoram","Maharashtra","New Year Festivals","West Bengal","Uttarakhand","Uttar Pradesh","Tripura","Telangana","Tamil Nadu","Sikkim","Rajasthan","Punjab","Nagaland","Odisha"]},
+{t:"Census",s:["History of Census in India","Census 2011","Census 1951"]},
+{t:"Important Days",s:["January","February","March","April","May","June","July","August","September","October","November","December"]},
+{t:"Books and Authors",s:["Books by Sports Personalities","Books by Indian Authors","Books by Film and Music Personalities","Books by Political and Historical Figures","Books by Foreign Authors","Other Notable Autobiographies"]},
+{t:"Sports",s:["Olympics","Indian Olympic Association (IOA)","Asian Games","Football","Tennis","Badminton","Basketball","Kho-Kho","Chess","India's Performance in Olympics","Commonwealth Games","Cricket","Hockey","Table Tennis","Ball Badminton","Kabaddi","Billiards","Miscellaneous"]},
+{t:"International Organisations",s:["United Nations","Other Specialized Agencies of the UN","UN Funds and Programmes","Regional Organisations","Other Organisations and Their Headquarters"]},
+{t:"National Organisations",s:["Science and Research Institutes","Agriculture Related Institutes","Defence and Development Related Institutes","Medical and Health Institutes","Other Important Institutions"]},
+{t:"Awards and Honours",s:["Civilian Awards","Gallantry Awards","Sports Awards","Literary Awards","Films and Entertainment Awards","Global Awards"]},
+]},
+];
+
+</script>
+<script>
+const INTERVALS = [1,3,7,15,30,60];
+const DAY = 86400000;
+
+function todayISO(){
+  const d = new Date();
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate()).toISOString().slice(0,10);
+}
+function addDays(iso,n){
+  const d = new Date(iso+'T00:00:00');
+  d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+function daysBetween(a,b){
+  return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / DAY);
+}
+function fmtDate(iso){
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
+// build flat topic id list
+function topicId(subCode, idx){ return subCode+'-'+idx; }
+
+let state = {}; // topicId -> {status, revCount, lastDate, nextDue}
+let loaded = false;
+let currentUser = null;
+
+function defaultState(){
+  const s = {};
+  SUBJECTS.forEach(sub=>{
+    sub.topics.forEach((tp,idx)=>{
+      s[topicId(sub.code,idx)] = {status:'pending', revCount:0, lastDate:null, nextDue:null};
+    });
+  });
+  return s;
+}
+
+// ===== Firebase config =====
+// Replace with the config object from your own Firebase project
+// (Project settings → General → Your apps → SDK setup and configuration).
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAQS97qOTYH6Thb4UaITP__9NZV_4H04m4",
+  authDomain: "cgl-dashboard-87003.firebaseapp.com",
+  projectId: "cgl-dashboard-87003",
+  storageBucket: "cgl-dashboard-87003.firebasestorage.app",
+  messagingSenderId: "283036552224",
+  appId: "1:283036552224:web:0c409ad7e92fa668f68045",
+  measurementId: "G-FK2CVZLV3R"
+};
+let db = null;
+try{
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+}catch(e){
+  console.warn('Firebase not configured — falling back to this browser only.', e);
+}
+
+const LOCAL_USER_KEY = 'ssc-cgl-user';
+
+async function loadState(user){
+  const local = localStorage.getItem('ssc-cgl-progress-'+user);
+  let localData = null;
+  try{ if(local) localData = JSON.parse(local); }catch(e){}
+
+  let remoteData = null;
+  if(db){
+    try{
+      const doc = await db.collection('progress').doc(user).get();
+      if(doc.exists) remoteData = doc.data().state;
+    }catch(e){
+      console.warn('Could not reach Firestore, using local copy.', e);
+    }
+  }
+
+  const base = defaultState();
+  if(localData) Object.assign(base, localData);
+  if(remoteData) Object.assign(base, remoteData); // remote wins if both exist
+  state = base;
+  loaded = true;
+}
+
+let saveTimer = null;
+function saveState(){
+  if(!currentUser) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{
+      localStorage.setItem('ssc-cgl-progress-'+currentUser, JSON.stringify(state));
+    }catch(e){ /* best-effort */ }
+    if(db){
+      try{
+        await db.collection('progress').doc(currentUser).set({
+          state, updatedAt: new Date().toISOString()
+        });
+        setSyncStatus('synced');
+      }catch(e){
+        setSyncStatus('offline');
+      }
+    }
+  }, 400);
+}
+
+function setSyncStatus(mode){
+  const pill = document.getElementById('userPillName');
+  if(!pill || !currentUser) return;
+  pill.textContent = currentUser + (mode==='offline' ? ' · not synced' : '');
+}
+
+function markRead(id){
+  const t = state[id];
+  const today = todayISO();
+  t.status = 'reading';
+  t.revCount = 0;
+  t.lastDate = today;
+  t.nextDue = addDays(today, INTERVALS[0]);
+  saveState();
+  render();
+}
+function markRevised(id){
+  const t = state[id];
+  const today = todayISO();
+  t.revCount = Math.min(t.revCount+1, 99);
+  t.lastDate = today;
+  const stage = Math.min(t.revCount, INTERVALS.length-1);
+  t.nextDue = addDays(today, INTERVALS[stage]);
+  t.status = t.revCount >= 5 ? 'mastered' : 'reading';
+  saveState();
+  render();
+}
+function resetTopic(id){
+  state[id] = {status:'pending', revCount:0, lastDate:null, nextDue:null};
+  saveState();
+  render();
+}
+
+function topicUrgency(t){
+  if(t.status === 'pending') return 'pending';
+  if(!t.nextDue) return 'pending';
+  const today = todayISO();
+  const diff = daysBetween(today, t.nextDue);
+  if(diff < 0) return 'overdue';
+  if(diff === 0) return 'today';
+  if(t.status === 'mastered') return 'mastered';
+  return 'upcoming';
+}
+
+function stampLabel(t, urgency){
+  if(urgency === 'pending') return 'not started';
+  if(urgency === 'overdue'){
+    const today = todayISO();
+    const d = Math.abs(daysBetween(today, t.nextDue));
+    return d===1 ? 'overdue · 1 day' : `overdue · ${d} days`;
+  }
+  if(urgency === 'today') return 'due today';
+  if(urgency === 'mastered') return `mastered · due ${fmtDate(t.nextDue)}`;
+  return `due ${fmtDate(t.nextDue)}`;
+}
+
+let openSubjects = new Set();
+let openSubtopics = new Set();
+
+function render(){
+  renderStats();
+  renderDocket();
+  renderRegisters();
+}
+
+function renderStats(){
+  let overdue=0, unread=0, reading=0, mastered=0;
+  Object.values(state).forEach(t=>{
+    if(t.status === 'pending') unread++;
+    else if(t.status === 'mastered') mastered++;
+    else reading++;
+    if(topicUrgency(t) === 'overdue') overdue++;
+  });
+  document.getElementById('statOverdue').textContent = overdue;
+  document.getElementById('statUnread').textContent = unread;
+  document.getElementById('statReading').textContent = reading;
+  document.getElementById('statMastered').textContent = mastered;
+}
+
+function renderDocket(){
+  const due = [];
+  SUBJECTS.forEach(sub=>{
+    sub.topics.forEach((tp,idx)=>{
+      const id = topicId(sub.code, idx);
+      const t = state[id];
+      const u = topicUrgency(t);
+      if(u === 'overdue' || u === 'today'){
+        due.push({id, title: tp.t, urgency: u});
+      }
+    });
+  });
+  const countEl = document.getElementById('dueCount');
+  countEl.textContent = due.length;
+  countEl.className = due.length === 0 ? 'n zero' : 'n';
+  document.getElementById('docketTitle').textContent = due.length ? "TODAY'S DOCKET" : "NOTHING DUE";
+
+  const wrap = document.getElementById('docketItems');
+  wrap.innerHTML = '';
+  if(due.length === 0){
+    const p = document.createElement('div');
+    p.className = 'docket-empty';
+    p.textContent = 'Everything is on schedule. Read a new topic below, or check back tomorrow.';
+    wrap.appendChild(p);
+    return;
+  }
+  due.sort((a,b)=> (a.urgency==='overdue'?0:1) - (b.urgency==='overdue'?0:1));
+  due.forEach(d=>{
+    const chip = document.createElement('button');
+    chip.className = 'docket-chip' + (d.urgency==='overdue' ? ' overdue' : '');
+    chip.textContent = d.title;
+    chip.onclick = ()=>{
+      const [code] = d.id.split('-');
+      openSubjects.add(code);
+      render();
+      setTimeout(()=>{
+        const el = document.getElementById('row-'+d.id);
+        if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+      }, 30);
+    };
+    wrap.appendChild(chip);
+  });
+}
+
+function renderRegisters(){
+  const root = document.getElementById('registers');
+  root.innerHTML = '';
+  SUBJECTS.forEach(sub=>{
+    const total = sub.topics.length;
+    let done = 0;
+    sub.topics.forEach((tp,idx)=>{
+      const t = state[topicId(sub.code,idx)];
+      if(t.status !== 'pending') done++;
+    });
+    const pct = Math.round((done/total)*100);
+
+    const box = document.createElement('div');
+    box.className = 'subject' + (openSubjects.has(sub.code) ? ' open' : '');
+
+    const head = document.createElement('div');
+    head.className = 'subject-head';
+    head.tabIndex = 0;
+    head.setAttribute('role','button');
+    head.innerHTML = `
+      <span class="caret">▸</span>
+      <span class="subject-code">${sub.code}</span>
+      <span class="subject-name">${sub.name}</span>
+      <span class="subject-progress-track"><span class="subject-progress-fill" style="width:${pct}%"></span></span>
+      <span class="subject-progress-txt">${done}/${total}</span>
+    `;
+    head.onclick = ()=>{
+      if(openSubjects.has(sub.code)) openSubjects.delete(sub.code);
+      else openSubjects.add(sub.code);
+      render();
+    };
+    box.appendChild(head);
+
+    const topicsWrap = document.createElement('div');
+    topicsWrap.className = 'topics';
+
+    sub.topics.forEach((tp,idx)=>{
+      const id = topicId(sub.code, idx);
+      const t = state[id];
+      const urgency = topicUrgency(t);
+      const subKey = id;
+
+      const row = document.createElement('div');
+      row.className = 'topic-row';
+      row.id = 'row-'+id;
+
+      const main = document.createElement('div');
+      main.className = 'topic-main';
+
+      const titleEl = document.createElement('div');
+      titleEl.className = 'topic-title';
+      titleEl.tabIndex = 0;
+      titleEl.innerHTML = `<span class="exp">${openSubtopics.has(subKey)?'▾':'▸'}</span><span>${tp.t}</span>`;
+      titleEl.onclick = ()=>{
+        if(openSubtopics.has(subKey)) openSubtopics.delete(subKey);
+        else openSubtopics.add(subKey);
+        render();
+      };
+      main.appendChild(titleEl);
+
+      const subEl = document.createElement('div');
+      subEl.className = 'topic-sub' + (openSubtopics.has(subKey) ? ' open' : '');
+      subEl.innerHTML = tp.s.map(x=>`<span>${x}</span>`).join('');
+      main.appendChild(subEl);
+
+      const meta = document.createElement('div');
+      meta.className = 'topic-meta';
+      const stamp = document.createElement('span');
+      stamp.className = 'stamp ' + urgency;
+      stamp.textContent = stampLabel(t, urgency);
+      meta.appendChild(stamp);
+      if(t.revCount > 0){
+        const rc = document.createElement('span');
+        rc.className = 'rev-count';
+        rc.textContent = `revised ${t.revCount}×`;
+        meta.appendChild(rc);
+      }
+      main.appendChild(meta);
+      row.appendChild(main);
+
+      const actions = document.createElement('div');
+      actions.className = 'topic-actions';
+      if(t.status === 'pending'){
+        const b = document.createElement('button');
+        b.className = 'btn primary';
+        b.textContent = 'Mark read';
+        b.onclick = ()=>{ markRead(id); pulseStamp(id); };
+        actions.appendChild(b);
+      } else {
+        const b = document.createElement('button');
+        b.className = 'btn primary';
+        b.textContent = 'Mark revised';
+        b.onclick = ()=>{ markRevised(id); pulseStamp(id); };
+        actions.appendChild(b);
+        const r = document.createElement('button');
+        r.className = 'btn ghost';
+        r.textContent = 'Reset';
+        r.onclick = ()=>{ if(confirm('Reset progress on "'+tp.t+'"?')) resetTopic(id); };
+        actions.appendChild(r);
+      }
+      row.appendChild(actions);
+
+      topicsWrap.appendChild(row);
+    });
+
+    box.appendChild(topicsWrap);
+    root.appendChild(box);
+  });
+}
+
+function pulseStamp(id){
+  setTimeout(()=>{
+    const row = document.getElementById('row-'+id);
+    if(!row) return;
+    const stamp = row.querySelector('.stamp');
+    if(stamp){
+      stamp.classList.add('just-hit');
+      setTimeout(()=>stamp.classList.remove('just-hit'), 300);
+    }
+  }, 30);
+}
+
+document.getElementById('todayLabel').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+// ===== who's revising =====
+async function startAs(user){
+  currentUser = user;
+  localStorage.setItem(LOCAL_USER_KEY, user);
+  document.getElementById('whoScreen').classList.add('hidden');
+  document.getElementById('appRoot').classList.remove('app-hidden');
+  document.getElementById('userPillName').textContent = user;
+  await loadState(user);
+  render();
+}
+
+document.querySelectorAll('.who-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.getElementById('whoStatus').textContent = 'Loading ' + btn.dataset.name + '\u2019s progress\u2026';
+    startAs(btn.dataset.name);
+  });
+});
+
+document.getElementById('userPill').addEventListener('click', ()=>{
+  document.getElementById('appRoot').classList.add('app-hidden');
+  document.getElementById('whoScreen').classList.remove('hidden');
+  document.getElementById('whoStatus').textContent = '';
+});
+
+(function init(){
+  const remembered = localStorage.getItem(LOCAL_USER_KEY);
+  if(remembered === 'Mayank' || remembered === 'Nidhi'){
+    startAs(remembered);
+  }
+  // otherwise the picker screen (visible by default) waits for a tap
+})();
+</script>
+</body>
+</html>
