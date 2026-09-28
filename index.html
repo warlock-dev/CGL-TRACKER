@@ -6,10 +6,9 @@
 <title>SSC CGL Revision Register</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
-<!-- Firebase (Firestore + Authentication) — sync across devices, and real per-person login -->
+<!-- Firebase (Firestore) — used so progress syncs across your phone and computer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <!-- Google Identity Services — used for the Google Calendar sync (Mayank only) -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
@@ -235,32 +234,23 @@
     outline:2px solid var(--brass);outline-offset:2px;
   }
 
-  /* ===== sign-in screen ===== */
+  /* ===== who's revising picker ===== */
   #whoScreen{
     position:fixed;inset:0;background:var(--ink-900);
     display:flex;align-items:center;justify-content:center;
-    z-index:100;flex-direction:column;gap:18px;padding:20px;
+    z-index:100;flex-direction:column;gap:22px;padding:20px;
   }
   #whoScreen.hidden{display:none;}
   #whoScreen .prompt{font-family:'Source Serif 4',serif;font-size:22px;color:var(--paper);}
-  #whoScreen .login-card{
-    display:flex;flex-direction:column;gap:12px;width:min(300px,88vw);
-  }
-  #whoScreen label{font-size:12px;color:var(--slate);display:flex;flex-direction:column;gap:5px;}
-  #whoScreen input{
-    font-family:'Inter',sans-serif;font-size:14px;color:var(--paper);
-    background:var(--ink-850);border:1px solid var(--line);border-radius:5px;
-    padding:9px 11px;outline:none;
-  }
-  #whoScreen input:focus{border-color:var(--brass);}
+  #whoScreen .options{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
   #whoScreen .who-btn{
-    font-family:'Source Serif 4',serif;font-size:16px;font-weight:600;
-    padding:11px 20px;border-radius:6px;border:1px solid var(--brass);
-    background:var(--brass);color:var(--ink-900);cursor:pointer;
-    transition:opacity .15s;margin-top:4px;
+    font-family:'Source Serif 4',serif;font-size:18px;font-weight:600;
+    padding:18px 34px;border-radius:6px;border:1px solid var(--line);
+    background:var(--ink-850);color:var(--paper);cursor:pointer;
+    transition:border-color .15s,background .15s;min-width:140px;
   }
-  #whoScreen .who-btn:hover{opacity:0.88;}
-  #whoScreen .status{font-size:12.5px;color:var(--vermillion);min-height:16px;text-align:center;}
+  #whoScreen .who-btn:hover{border-color:var(--brass);background:var(--ink-800);}
+  #whoScreen .status{font-size:12.5px;color:var(--slate);min-height:16px;}
   .app-hidden{display:none;}
   .user-pill{
     display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--slate);
@@ -268,8 +258,7 @@
     background:var(--ink-850);
   }
   .user-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--brass);}
-  .user-pill:hover{border-color:var(--vermillion);color:var(--paper);}
-  .user-pill:hover::after{content:" · sign out";}
+  .user-pill:hover{border-color:var(--brass);color:var(--paper);}
 
   /* ===== Nidhi theme ===== */
   body.theme-nidhi{
@@ -315,83 +304,15 @@
     transition:opacity .25s ease, transform .25s ease;
   }
   .popup.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
-
-  /* ===== mock test scores ===== */
-  .mocks-section{margin-top:36px;}
-  .mocks-head{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
-    margin-bottom:16px;flex-wrap:wrap;
-  }
-  .mocks-head h2{
-    font-size:18px;font-weight:600;margin:0;color:var(--paper);
-  }
-  .mocks-chart-wrap{
-    background:var(--ink-850);border:1px solid var(--line);border-radius:6px;
-    padding:16px 18px;margin-bottom:16px;
-  }
-  .mocks-empty{font-size:13px;color:var(--slate);font-style:italic;padding:20px 0;text-align:center;}
-  #mocksChart{width:100%;height:200px;display:block;}
-  .mocks-legend{display:flex;gap:18px;margin-top:10px;font-size:12px;color:var(--slate);}
-  .mocks-legend .op-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle;}
-  .mock-pt{cursor:default;}
-  .mock-axis-label{font-size:9px;fill:var(--slate);}
-  .mock-grid{stroke:var(--line);stroke-width:1;}
-
-  .mocks-table-wrap{
-    background:var(--ink-850);border:1px solid var(--line);border-radius:6px;overflow:hidden;
-    overflow-x:auto;
-  }
-  .mocks-table{width:100%;border-collapse:collapse;font-size:13px;}
-  .mocks-table th{
-    text-align:left;font-size:11px;color:var(--slate);font-weight:500;
-    padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap;
-  }
-  .mocks-table td{
-    padding:9px 14px;border-bottom:1px solid var(--line);color:var(--paper-dim);white-space:nowrap;
-  }
-  .mocks-table tr:last-child td{border-bottom:none;}
-  .mocks-table .tier-pill{
-    font-size:10.5px;padding:2px 8px;border-radius:20px;border:1px solid;
-  }
-  .mocks-table .tier-pill.prelims{color:#9cc0e0;border-color:var(--steel-dim);}
-  .mocks-table .tier-pill.mains{color:#e3a794;border-color:var(--vermillion-dim);}
-  .mocks-table .del-btn{
-    background:none;border:none;color:var(--slate-dim);cursor:pointer;font-size:12px;padding:2px 6px;
-  }
-  .mocks-table .del-btn:hover{color:var(--vermillion);}
-
-  /* ===== add-mock modal ===== */
-  .mock-modal{
-    position:fixed;inset:0;background:rgba(0,0,0,0.55);
-    display:none;align-items:center;justify-content:center;z-index:150;padding:20px;
-  }
-  .mock-modal.open{display:flex;}
-  .mock-modal-card{
-    background:var(--ink-850);border:1px solid var(--line);border-radius:8px;
-    padding:22px;width:min(340px,92vw);display:flex;flex-direction:column;gap:12px;
-  }
-  .mock-modal-card h3{margin:0 0 4px;font-size:16px;color:var(--paper);}
-  .mock-modal-card label{
-    font-size:12px;color:var(--slate);display:flex;flex-direction:column;gap:5px;
-  }
-  .mock-modal-card .opt{color:var(--slate-dim);font-weight:400;}
-  .mock-modal-card input, .mock-modal-card select{
-    font-family:'Inter',sans-serif;font-size:14px;color:var(--paper);
-    background:var(--ink-800);border:1px solid var(--line);border-radius:5px;
-    padding:8px 10px;outline:none;
-  }
-  .mock-modal-card input:focus, .mock-modal-card select:focus{border-color:var(--brass);}
-  .mock-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px;}
 </style>
 </head>
 <body>
 
 <div id="whoScreen">
-  <div class="prompt">Sign in to revise</div>
-  <div class="login-card">
-    <label>Email<input type="email" id="loginEmail" autocomplete="username" /></label>
-    <label>Password<input type="password" id="loginPassword" autocomplete="current-password" /></label>
-    <button class="who-btn" id="loginBtn">Sign in</button>
+  <div class="prompt">Who's revising?</div>
+  <div class="options">
+    <button class="who-btn" data-name="Mayank">Mayank</button>
+    <button class="who-btn" data-name="Nidhi">Nidhi</button>
   </div>
   <div class="status" id="whoStatus"></div>
 </div>
@@ -403,7 +324,7 @@
   <div class="masthead">
     <div>
       <h1>SSC CGL Revision Register</h1>
-      <div class="sub">128 topics · 12 subjects · scheduled by the forgetting curve</div>
+      <div class="sub">121 topics · 11 subjects · scheduled by the forgetting curve</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
       <div class="date" id="todayLabel"></div>
@@ -450,59 +371,6 @@
     <b>How the schedule works —</b> the day you mark a topic "read", it's due back for a quick pass after 1 day. Each time you revise it on schedule, the gap widens: 1 → 3 → 7 → 15 → 30 → 60 days, following the standard spaced-repetition curve for exam retention. Five revisions and a topic is marked mastered, but it still resurfaces every 60 days to keep it from fading. If a revision is missed, the schedule itself doesn't reset — it just keeps nudging you daily until you catch up. Everything here is saved to your account automatically. For Mayank, connecting Google Calendar above keeps a matching reminder on your calendar for every topic in the revision cycle, moved and relabelled automatically as you progress.
   </div>
 
-  <div class="mocks-section">
-    <div class="mocks-head">
-      <h2>Mock Test Scores</h2>
-      <button class="btn primary" id="addMockBtn">+ Add score</button>
-    </div>
-
-    <div class="mocks-chart-wrap" id="mocksChartWrap">
-      <div class="mocks-empty" id="mocksEmpty">No mock scores logged yet — add your first one above.</div>
-      <svg id="mocksChart" viewBox="0 0 640 220" preserveAspectRatio="none" style="display:none;"></svg>
-      <div class="mocks-legend" id="mocksLegend" style="display:none;">
-        <span><i class="op-dot" style="background:var(--steel)"></i>Tier 1 — Prelims</span>
-        <span><i class="op-dot" style="background:var(--vermillion)"></i>Tier 2 — Mains</span>
-      </div>
-    </div>
-
-    <div class="mocks-table-wrap">
-      <table class="mocks-table" id="mocksTable">
-        <thead>
-          <tr><th>Date</th><th>Tier</th><th>Label</th><th>Score</th><th>%</th><th></th></tr>
-        </thead>
-        <tbody id="mocksTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-</div>
-
-<div class="mock-modal" id="mockModal">
-  <div class="mock-modal-card">
-    <h3>Add mock score</h3>
-    <label>Date
-      <input type="date" id="mockDate" />
-    </label>
-    <label>Paper
-      <select id="mockTier">
-        <option value="prelims">Tier 1 — Prelims</option>
-        <option value="mains">Tier 2 — Mains</option>
-      </select>
-    </label>
-    <label>Score
-      <input type="number" id="mockScore" step="0.01" placeholder="e.g. 154" />
-    </label>
-    <label>Out of
-      <input type="number" id="mockMax" step="0.01" value="200" />
-    </label>
-    <label>Label <span class="opt">(optional)</span>
-      <input type="text" id="mockLabel" placeholder="e.g. Testbook Mock 7" />
-    </label>
-    <div class="mock-modal-actions">
-      <button class="btn ghost" id="mockCancel">Cancel</button>
-      <button class="btn primary" id="mockSave">Save</button>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -650,15 +518,6 @@ const SUBJECTS = [
 {t:"National Organisations",s:["Science and Research Institutes","Agriculture Related Institutes","Defence and Development Related Institutes","Medical and Health Institutes","Other Important Institutions"]},
 {t:"Awards and Honours",s:["Civilian Awards","Gallantry Awards","Sports Awards","Literary Awards","Films and Entertainment Awards","Global Awards"]},
 ]},
-{code:"12",name:"Mathematics",topics:[
-{t:"Number System",s:["Computation of Whole Numbers","Decimals and Fractions","Relationship Between Numbers"]},
-{t:"Arithmetic",s:["Percentages","Ratio and Proportion","Square Roots","Averages","Interest (Simple and Compound)","Profit and Loss, Discount","Partnership Business","Mixture and Alligation","Time and Distance","Time and Work"]},
-{t:"Algebra",s:["Basic Algebraic Identities of School Algebra","Elementary Surds","Graphs of Linear Equations"]},
-{t:"Geometry",s:["Elementary Geometric Figures and Facts","Triangle and Its Various Kinds of Centres","Congruence and Similarity of Triangles","Circle — Chords and Tangents","Angles Subtended by Chords of a Circle","Common Tangents to Two or More Circles"]},
-{t:"Mensuration",s:["Triangle","Quadrilaterals","Regular Polygons","Circle","Right Prism","Right Circular Cone","Right Circular Cylinder","Sphere","Hemispheres","Rectangular Parallelepiped","Regular Right Pyramid (Triangular or Square Base)"]},
-{t:"Trigonometry",s:["Trigonometric Ratios","Degree and Radian Measures","Standard Identities","Complementary Angles","Heights and Distances"]},
-{t:"Statistics and Probability",s:["Use of Tables and Graphs: Histogram, Frequency Polygon, Bar Diagram, Pie Chart","Measures of Central Tendency: Mean, Median, Mode, Standard Deviation","Calculation of Simple Probabilities"]},
-]},
 ];
 
 </script>
@@ -688,8 +547,7 @@ function topicId(subCode, idx){ return subCode+'-'+idx; }
 
 let state = {}; // topicId -> {status, revCount, lastDate, nextDue}
 let loaded = false;
-let currentUser = null; // display name: 'Mayank' or 'Nidhi'
-let currentUid = null;  // Firebase Auth UID — this is the real access key
+let currentUser = null;
 
 function defaultState(){
   const s = {};
@@ -698,20 +556,7 @@ function defaultState(){
       s[topicId(sub.code,idx)] = {status:'pending', revCount:0, lastDate:null, nextDue:null, calendarEventId:null, calendarDate:null};
     });
   });
-  s.mocks = []; // mock test score history — see Mocks section below
   return s;
-}
-
-// Iterates only the real syllabus-topic entries in `state`, skipping
-// non-topic keys like `mocks` that live alongside them in the same object.
-function allTopicStates(){
-  const list = [];
-  SUBJECTS.forEach(sub=>{
-    sub.topics.forEach((tp,idx)=>{
-      list.push(state[topicId(sub.code,idx)]);
-    });
-  });
-  return list;
 }
 
 // ===== Firebase config =====
@@ -726,33 +571,25 @@ const firebaseConfig = {
   appId: "1:283036552224:web:0c409ad7e92fa668f68045",
   measurementId: "G-FK2CVZLV3R"
 };
-
-// Map each person's real sign-in email (created in Firebase Console →
-// Authentication → Users) to the display name the app uses everywhere
-// else. See README for how to create these two accounts.
-const USER_EMAILS = {
-  Mayank: "REPLACE_MAYANK_EMAIL@example.com",
-  Nidhi: "REPLACE_NIDHI_EMAIL@example.com"
-};
-
-let db = null, auth = null;
+let db = null;
 try{
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
-  auth = firebase.auth();
 }catch(e){
-  console.warn('Firebase not configured — sign-in and sync are disabled until you add your config.', e);
+  console.warn('Firebase not configured — falling back to this browser only.', e);
 }
 
-async function loadState(uid){
-  const local = localStorage.getItem('ssc-cgl-progress-'+uid);
+const LOCAL_USER_KEY = 'ssc-cgl-user';
+
+async function loadState(user){
+  const local = localStorage.getItem('ssc-cgl-progress-'+user);
   let localData = null;
   try{ if(local) localData = JSON.parse(local); }catch(e){}
 
   let remoteData = null;
   if(db){
     try{
-      const doc = await db.collection('progress').doc(uid).get();
+      const doc = await db.collection('progress').doc(user).get();
       if(doc.exists) remoteData = doc.data().state;
     }catch(e){
       console.warn('Could not reach Firestore, using local copy.', e);
@@ -768,16 +605,16 @@ async function loadState(uid){
 
 let saveTimer = null;
 function saveState(){
-  if(!currentUid) return;
+  if(!currentUser) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async ()=>{
     try{
-      localStorage.setItem('ssc-cgl-progress-'+currentUid, JSON.stringify(state));
+      localStorage.setItem('ssc-cgl-progress-'+currentUser, JSON.stringify(state));
     }catch(e){ /* best-effort */ }
     if(db){
       try{
-        await db.collection('progress').doc(currentUid).set({
-          state, name: currentUser, updatedAt: new Date().toISOString()
+        await db.collection('progress').doc(currentUser).set({
+          state, updatedAt: new Date().toISOString()
         });
         setSyncStatus('synced');
       }catch(e){
@@ -877,7 +714,6 @@ function render(){
   renderStats();
   renderDocket();
   renderRegisters();
-  renderMocks();
 }
 
 function stageOf(t){
@@ -888,7 +724,7 @@ function stageOf(t){
 
 function renderOverallProgress(){
   let read=0, revising=0, mastered=0, pending=0;
-  allTopicStates().forEach(t=>{
+  Object.values(state).forEach(t=>{
     const st = stageOf(t);
     if(st==='read') read++;
     else if(st==='revising') revising++;
@@ -920,7 +756,7 @@ function renderOverallProgress(){
 
 function renderStats(){
   let overdue=0, unread=0, reading=0, mastered=0;
-  allTopicStates().forEach(t=>{
+  Object.values(state).forEach(t=>{
     if(t.status === 'pending') unread++;
     else if(t.status === 'mastered') mastered++;
     else reading++;
@@ -1105,145 +941,6 @@ function pulseStamp(id){
   }, 30);
 }
 
-// =====================================================================
-// Mock test scores — history chart + log
-// =====================================================================
-function addMockEntry(entry){
-  if(!state.mocks) state.mocks = [];
-  state.mocks.push(entry);
-  saveState();
-  renderMocks();
-}
-function deleteMockEntry(id){
-  state.mocks = (state.mocks || []).filter(m => m.id !== id);
-  saveState();
-  renderMocks();
-}
-
-function openMockModal(){
-  document.getElementById('mockDate').value = todayISO();
-  document.getElementById('mockTier').value = 'prelims';
-  document.getElementById('mockScore').value = '';
-  document.getElementById('mockMax').value = '200';
-  document.getElementById('mockLabel').value = '';
-  document.getElementById('mockModal').classList.add('open');
-  setTimeout(()=>document.getElementById('mockScore').focus(), 30);
-}
-function closeMockModal(){
-  document.getElementById('mockModal').classList.remove('open');
-}
-function saveMockFromModal(){
-  const date = document.getElementById('mockDate').value || todayISO();
-  const tier = document.getElementById('mockTier').value;
-  const score = parseFloat(document.getElementById('mockScore').value);
-  const max = parseFloat(document.getElementById('mockMax').value) || 200;
-  const label = document.getElementById('mockLabel').value.trim();
-  if(isNaN(score)){
-    alert('Enter a score first.');
-    return;
-  }
-  addMockEntry({
-    id: 'm-' + Date.now() + '-' + Math.random().toString(36).slice(2,7),
-    date, tier, score, max, label
-  });
-  closeMockModal();
-}
-
-document.getElementById('addMockBtn').addEventListener('click', openMockModal);
-document.getElementById('mockCancel').addEventListener('click', closeMockModal);
-document.getElementById('mockSave').addEventListener('click', saveMockFromModal);
-document.getElementById('mockModal').addEventListener('click', (e)=>{
-  if(e.target.id === 'mockModal') closeMockModal();
-});
-
-function renderMocks(){
-  const mocks = (state.mocks || []).slice().sort((a,b)=> a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
-
-  // --- table (most recent first) ---
-  const tbody = document.getElementById('mocksTableBody');
-  tbody.innerHTML = '';
-  mocks.slice().reverse().forEach(m=>{
-    const pct = m.max ? Math.round((m.score/m.max)*1000)/10 : '—';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${fmtDate(m.date)}</td>
-      <td><span class="tier-pill ${m.tier}">${m.tier==='mains' ? 'Tier 2 · Mains' : 'Tier 1 · Prelims'}</span></td>
-      <td>${m.label ? escapeHtml(m.label) : '<span style="color:var(--slate-dim)">—</span>'}</td>
-      <td>${m.score} / ${m.max}</td>
-      <td>${pct}%</td>
-      <td><button class="del-btn" title="Delete">✕</button></td>
-    `;
-    tr.querySelector('.del-btn').addEventListener('click', ()=>{
-      if(confirm('Delete this mock score?')) deleteMockEntry(m.id);
-    });
-    tbody.appendChild(tr);
-  });
-
-  // --- chart ---
-  const svg = document.getElementById('mocksChart');
-  const emptyEl = document.getElementById('mocksEmpty');
-  const legendEl = document.getElementById('mocksLegend');
-  if(mocks.length === 0){
-    svg.style.display = 'none';
-    legendEl.style.display = 'none';
-    emptyEl.style.display = 'block';
-    return;
-  }
-  emptyEl.style.display = 'none';
-  svg.style.display = 'block';
-  legendEl.style.display = 'flex';
-
-  const W = 640, H = 220, padL = 34, padR = 14, padT = 14, padB = 26;
-  const innerW = W - padL - padR, innerH = H - padT - padB;
-  const n = mocks.length;
-  const xFor = (i)=> n<=1 ? padL+innerW/2 : padL + (i/(n-1))*innerW;
-  const yFor = (pct)=> padT + innerH - (Math.max(0,Math.min(100,pct))/100)*innerH;
-
-  let svgParts = [];
-  // gridlines at 0/25/50/75/100%
-  [0,25,50,75,100].forEach(g=>{
-    const y = yFor(g);
-    svgParts.push(`<line class="mock-grid" x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" />`);
-    svgParts.push(`<text class="mock-axis-label" x="4" y="${y+3}">${g}%</text>`);
-  });
-
-  function seriesPath(tierKey){
-    const pts = mocks.map((m,i)=> m.tier===tierKey ? {x:xFor(i), y:yFor(m.max ? (m.score/m.max*100) : 0)} : null);
-    const present = pts.map((p,i)=> p ? `${p.x},${p.y}` : null).filter(Boolean);
-    // Only connect consecutive same-tier points that are adjacent in the filtered set
-    let path = '';
-    let started = false;
-    pts.forEach(p=>{
-      if(!p) return;
-      path += (started ? 'L' : 'M') + p.x + ',' + p.y + ' ';
-      started = true;
-    });
-    return {path, pts};
-  }
-
-  const prelims = seriesPath('prelims');
-  const mains = seriesPath('mains');
-
-  if(prelims.path) svgParts.push(`<path d="${prelims.path}" fill="none" stroke="var(--steel)" stroke-width="2" />`);
-  if(mains.path) svgParts.push(`<path d="${mains.path}" fill="none" stroke="var(--vermillion)" stroke-width="2" />`);
-
-  mocks.forEach((m,i)=>{
-    const x = xFor(i);
-    const y = yFor(m.max ? (m.score/m.max*100) : 0);
-    const color = m.tier==='mains' ? 'var(--vermillion)' : 'var(--steel)';
-    const pct = m.max ? Math.round((m.score/m.max)*1000)/10 : 0;
-    svgParts.push(`<circle class="mock-pt" cx="${x}" cy="${y}" r="4" fill="${color}"><title>${fmtDate(m.date)} · ${m.tier==='mains'?'Mains':'Prelims'} · ${m.score}/${m.max} (${pct}%)${m.label?' · '+escapeHtml(m.label):''}</title></circle>`);
-  });
-
-  svg.innerHTML = svgParts.join('');
-}
-
-function escapeHtml(str){
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-
 // ===== Nidhi's pet-name popup (unclickable — closes itself only) =====
 let popupTimer = null;
 function showPetPopup(text){
@@ -1384,10 +1081,10 @@ document.getElementById('connectGcal').addEventListener('click', ()=>{
   tokenClient.requestAccessToken({ prompt: gcalToken ? '' : 'consent' });
 });
 
-// ===== sign in (Firebase Authentication — real password check) =====
-async function startAs(user, uid){
+// ===== who's revising =====
+async function startAs(user){
   currentUser = user;
-  currentUid = uid;
+  localStorage.setItem(LOCAL_USER_KEY, user);
   document.getElementById('whoScreen').classList.add('hidden');
   document.getElementById('appRoot').classList.remove('app-hidden');
   document.getElementById('userPillName').textContent = user;
@@ -1395,7 +1092,7 @@ async function startAs(user, uid){
   document.body.classList.toggle('theme-nidhi', user === 'Nidhi');
   document.getElementById('connectGcal').classList.toggle('gcal-hidden', user !== 'Mayank');
 
-  await loadState(uid);
+  await loadState(user);
   render();
 
   if(user === 'Mayank'){
@@ -1403,65 +1100,26 @@ async function startAs(user, uid){
   }
 }
 
-function showLoginScreen(msg){
-  currentUser = null;
-  currentUid = null;
-  document.getElementById('appRoot').classList.add('app-hidden');
-  document.getElementById('whoScreen').classList.remove('hidden');
-  document.getElementById('whoStatus').textContent = msg || '';
-  document.getElementById('loginPassword').value = '';
-}
-
-async function attemptSignIn(){
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const statusEl = document.getElementById('whoStatus');
-  if(!auth){ statusEl.textContent = 'Firebase isn\u2019t configured yet — see README.'; return; }
-  if(!email || !password){ statusEl.textContent = 'Enter both email and password.'; return; }
-  const btn = document.getElementById('loginBtn');
-  btn.disabled = true;
-  statusEl.style.color = 'var(--slate)';
-  statusEl.textContent = 'Signing in\u2026';
-  try{
-    await auth.signInWithEmailAndPassword(email, password);
-    // onAuthStateChanged below takes it from here
-  }catch(e){
-    statusEl.style.color = 'var(--vermillion)';
-    statusEl.textContent = 'Sign-in failed — check your email and password.';
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-document.getElementById('loginBtn').addEventListener('click', attemptSignIn);
-document.getElementById('loginPassword').addEventListener('keydown', (e)=>{ if(e.key==='Enter') attemptSignIn(); });
-document.getElementById('loginEmail').addEventListener('keydown', (e)=>{ if(e.key==='Enter') document.getElementById('loginPassword').focus(); });
-
-document.getElementById('userPill').addEventListener('click', ()=>{
-  if(auth) auth.signOut();
-  else showLoginScreen();
+document.querySelectorAll('.who-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.getElementById('whoStatus').textContent = 'Loading ' + btn.dataset.name + '\u2019s progress\u2026';
+    startAs(btn.dataset.name);
+  });
 });
 
-if(auth){
-  auth.onAuthStateChanged(async (user)=>{
-    if(user){
-      const email = (user.email || '').toLowerCase();
-      let name = null;
-      if(email === USER_EMAILS.Mayank.toLowerCase()) name = 'Mayank';
-      else if(email === USER_EMAILS.Nidhi.toLowerCase()) name = 'Nidhi';
-      if(!name){
-        showLoginScreen('This account isn\u2019t set up for this tracker.');
-        auth.signOut();
-        return;
-      }
-      startAs(name, user.uid);
-    } else {
-      showLoginScreen();
-    }
-  });
-} else {
-  document.getElementById('whoStatus').textContent = 'Firebase isn\u2019t configured yet — see README.';
-}
+document.getElementById('userPill').addEventListener('click', ()=>{
+  document.getElementById('appRoot').classList.add('app-hidden');
+  document.getElementById('whoScreen').classList.remove('hidden');
+  document.getElementById('whoStatus').textContent = '';
+});
+
+(function init(){
+  const remembered = localStorage.getItem(LOCAL_USER_KEY);
+  if(remembered === 'Mayank' || remembered === 'Nidhi'){
+    startAs(remembered);
+  }
+  // otherwise the picker screen (visible by default) waits for a tap
+})();
 </script>
 </body>
 </html>
